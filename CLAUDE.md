@@ -2,11 +2,28 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Repository status
+## Repository layout
 
-This repository is **pre-implementation**. The only file is `voting-app-architecture.md`, a design document for a microservices voting app intended to demonstrate observability patterns (OpenTelemetry + Datadog, optional Temporal). There is no source code, no build system, no tests, and no `docker-compose.yml` yet.
+- `migrations/` — golang-migrate SQL files (`votes`, `vote_results`).
+- `shared/` — Go module with `obs/` (tracing, logging, metrics, shutdown), `httpx/` (CORS, health), `pgxdb/` (otelpgx-wrapped pool). Imported by every service via `go.work`.
+- `vote-api/`, `results-api/`, `tally-worker/` — independent Go modules. Each has `cmd/<name>/main.go` + `internal/` packages.
+- `frontend/` — static HTML/JS served by nginx.
+- `docker-compose.yml` — `postgres`, one-shot `migrate`, the three Go services, `frontend`, and `datadog-agent`. The architecture doc remains the source of truth for HTTP shapes, schema, and metric names.
 
-Before writing code or inventing commands (build/test/run), read `voting-app-architecture.md` — it is the source of truth for service boundaries, APIs, schema, and observability requirements.
+## Build / test / run
+
+| Task | Command |
+| --- | --- |
+| Run all unit + integration tests (Docker required) | `make test` |
+| Build all images | `make build` |
+| Bring the full stack up | `cp .env.example .env && $EDITOR .env && make up` |
+| Tear down (incl. volumes) | `make down` |
+| End-to-end smoke test | `make smoke` |
+| Per-service test | `cd <service> && go test ./... -timeout 120s` |
+
+Integration tests for the data path (`vote-api/internal/store`, `tally-worker/internal/tally`, `results-api/internal/store`) use `testcontainers-go/postgres` and **require a running Docker daemon**. Pure-handler tests (`vote-api/internal/handler`, `results-api/internal/handler`) and `shared/` tests don't.
+
+Temporal variant (§4.4.2) is **not implemented** — see `docs/superpowers/plans/` for that follow-up plan when it lands.
 
 ## Architecture (planned)
 
