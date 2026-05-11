@@ -1,4 +1,4 @@
-.PHONY: up down logs ps test tidy fmt vet build smoke
+.PHONY: up down logs ps test tidy fmt vet build smoke k8s-build k8s-up k8s-smoke k8s-down
 
 up:
 	podman compose up -d --build
@@ -34,3 +34,21 @@ build:
 
 smoke:
 	./scripts/smoke.sh
+
+.PHONY: k8s-build k8s-up k8s-smoke k8s-down
+
+OVERLAY ?= dev
+
+k8s-build:
+	kubectl kustomize --load-restrictor=LoadRestrictionsNone deploy/k8s/overlays/$(OVERLAY)
+
+k8s-up:
+	# Job 'migrate' is immutable; delete it (if present) before applying.
+	kubectl -n voting-app delete job/migrate --ignore-not-found
+	kubectl kustomize --load-restrictor=LoadRestrictionsNone deploy/k8s/overlays/$(OVERLAY) | kubectl apply -f -
+
+k8s-smoke:
+	HOST=$${HOST:?HOST must be set (Ingress host)} ./scripts/k8s-smoke.sh
+
+k8s-down:
+	kubectl kustomize --load-restrictor=LoadRestrictionsNone deploy/k8s/overlays/$(OVERLAY) | kubectl delete -f - --ignore-not-found
