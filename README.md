@@ -1,3 +1,49 @@
+# voting-app
+
+A small distributed voting demo built to exercise tracing, metrics, and logs across process boundaries. It's intentionally split into four services so observability signals cross several hops:
+
+- **frontend** — static HTML/JS served by nginx.
+- **vote-api** (Go) — write path. `POST /vote` inserts a row into the `votes` table.
+- **results-api** (Go) — read path. `GET /results?poll_id=…` reads pre-aggregated rows from `vote_results`.
+- **tally-worker** (Go) — a ticker that aggregates `votes` → `vote_results` in a single Postgres transaction (idempotent, runs every `TALLY_INTERVAL`).
+
+Backing services: a single Postgres (two tables, `votes` and `vote_results`), a golang-migrate job for schema, and a Datadog Agent that receives traces (port 8126) and dogstatsd metrics (port 8125) directly from the Go services. Architecture details live in [`voting-app-architecture.md`](voting-app-architecture.md); project conventions live in [`CLAUDE.md`](CLAUDE.md).
+
+## Quick start — docker compose / podman compose
+
+The `Makefile` shells out to `podman compose` by default; substitute `docker compose` if you use Docker — every command is compose v2 compatible.
+
+1. **Copy the env template and fill in your Datadog API key** (the only required edit):
+
+   ```bash
+   cp .env.example .env
+   $EDITOR .env   # set DD_API_KEY=...
+   ```
+
+2. **Build images and bring the stack up:**
+
+   ```bash
+   make up        # podman compose up -d --build
+   ```
+
+3. **Open the UI** at <http://localhost:8080>, cast some votes, and watch the tallies update.
+
+4. **End-to-end smoke (optional):**
+
+   ```bash
+   make smoke     # casts 5 tacos + 2 burritos and asserts the counts
+   ```
+
+5. **Tear it all down:**
+
+   ```bash
+   make down      # podman compose down -v
+   ```
+
+Useful extras: `make logs` tails everything, `make ps` lists containers, `make test` runs the Go suite (requires the Docker/podman socket so testcontainers can spin up Postgres).
+
+The frontend's API calls are relative (`/vote`, `/results`) and nginx proxies them to the sibling services inside the compose network — same routing model as the Ingress in production.
+
 ## Deploying to GKE
 
 The `deploy/k8s` directory contains a Kustomize base + `dev` / `prod` overlays. Spec: `docs/superpowers/specs/2026-05-11-k8s-deployment-design.md`.
