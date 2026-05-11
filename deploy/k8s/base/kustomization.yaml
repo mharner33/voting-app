@@ -21,6 +21,9 @@ resources:
   - results-api/backendconfig.yaml
   - tally-worker/serviceaccount.yaml
   - tally-worker/deployment.yaml
+  - frontend/deployment.yaml
+  - frontend/service.yaml
+  - frontend/backendconfig.yaml
 
 configMapGenerator:
   - name: app-config
