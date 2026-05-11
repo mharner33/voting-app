@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: voting-app
+  annotations:
+    kubernetes.io/ingress.class: gce
+    kubernetes.io/ingress.global-static-ip-name: voting-ip
+    networking.gke.io/managed-certificates: voting-app
+    networking.gke.io/v1beta1.FrontendConfig: voting-app
+spec:
+  rules:
+    - host: voting.example.com
+      http:
+        paths:
+          - path: /vote
+            pathType: Prefix
+            backend:
+              service:
+                name: vote-api
+                port:
+                  number: 8080
+          - path: /results
+            pathType: Prefix
+            backend:
+              service:
+                name: results-api
+                port:
+                  number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 8080

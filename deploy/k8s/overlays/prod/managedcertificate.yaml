@@ -1,0 +1,7 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: voting-app
+spec:
+  domains:
+    - voting.example.com    # replace with your prod hostname
