@@ -10,11 +10,18 @@ resources:
   - namespace.yaml
   - postgres/statefulset.yaml
   - postgres/service.yaml
+  - migrations/job.yaml
 
 configMapGenerator:
   - name: app-config
     envs:
       - config/app-config.env
+  - name: migrations-sql
+    files:
+      - ../../../migrations/0001_create_votes.up.sql
+      - ../../../migrations/0001_create_votes.down.sql
+      - ../../../migrations/0002_create_vote_results.up.sql
+      - ../../../migrations/0002_create_vote_results.down.sql
 
 generatorOptions:
   disableNameSuffixHash: false
