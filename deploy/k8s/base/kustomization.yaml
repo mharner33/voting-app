@@ -19,6 +19,8 @@ resources:
   - results-api/deployment.yaml
   - results-api/service.yaml
   - results-api/backendconfig.yaml
+  - tally-worker/serviceaccount.yaml
+  - tally-worker/deployment.yaml
 
 configMapGenerator:
   - name: app-config
