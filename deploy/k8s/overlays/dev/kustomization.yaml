@@ -1,0 +1,33 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: voting-app
+
+resources:
+  - ../../base
+
+# Override the base ConfigMap by regenerating it with dev values.
+# behavior=replace makes this overlay-scoped generator fully replace
+# the base generator's output (rather than merging).
+configMapGenerator:
+  - name: app-config
+    behavior: replace
+    envs:
+      - patches/app-config.env
+
+# Pin images for the dev environment.
+images:
+  - name: docker.io/votingapp/vote-api
+    newTag: dev
+  - name: docker.io/votingapp/results-api
+    newTag: dev
+  - name: docker.io/votingapp/tally-worker
+    newTag: dev
+  - name: docker.io/votingapp/frontend
+    newTag: dev
+
+patches:
+  - path: patches/ingress-host.yaml
+    target:
+      kind: Ingress
+      name: voting-app
