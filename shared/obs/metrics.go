@@ -1,6 +1,8 @@
 package obs
 
 import (
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/DataDog/datadog-go/v5/statsd"
@@ -21,6 +23,10 @@ type Metrics struct {
 
 // NewMetrics returns a Metrics backed by a real dogstatsd client when
 // cfg.Address is non-empty, or a no-op client otherwise.
+// If the agent address is set but unreachable at startup (e.g. agent not yet
+// running), NewMetrics logs to stderr and falls back to the no-op client so
+// the service can still start. Metrics will be silently dropped until the
+// process is restarted with a reachable agent.
 func NewMetrics(cfg MetricsConfig) (*Metrics, error) {
 	if cfg.Address == "" {
 		return &Metrics{client: &statsd.NoOpClient{}}, nil
@@ -34,7 +40,10 @@ func NewMetrics(cfg MetricsConfig) (*Metrics, error) {
 		}),
 	)
 	if err != nil {
-		return nil, err
+		// Agent unreachable at startup — degrade gracefully to no-op.
+		// Traces will also be missing; add a Datadog Agent to restore both.
+		fmt.Fprintf(os.Stderr, "obs: metrics agent unreachable (%s), using no-op client: %v\n", cfg.Address, err)
+		return &Metrics{client: &statsd.NoOpClient{}}, nil
 	}
 	return &Metrics{client: c}, nil
 }
