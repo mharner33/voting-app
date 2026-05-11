@@ -41,9 +41,10 @@ spec:
             limits:
               cpu: 200m
               memory: 128Mi
+          # nginx writes pid + temp files at runtime; tmpfs covers it.
           securityContext:
             allowPrivilegeEscalation: false
-            runAsNonRoot: false
+            runAsNonRoot: false   # nginx:1.27-alpine wants root for port binding
             capabilities:
               drop: ["ALL"]
               add: ["NET_BIND_SERVICE"]
