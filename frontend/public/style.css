@@ -1,0 +1,8 @@
+:root { font-family: system-ui, sans-serif; }
+body  { max-width: 32rem; margin: 2rem auto; padding: 0 1rem; }
+.choices button {
+  font-size: 1.1rem; padding: 0.6rem 1.2rem; margin-right: 0.5rem; cursor: pointer;
+}
+#status { min-height: 1.2em; }
+.muted  { color: #666; font-size: 0.85rem; }
+ul#results { padding-left: 1.2rem; }

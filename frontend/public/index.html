@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Voting App</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main>
+    <h1>Vote</h1>
+    <p>Default poll: choose one.</p>
+    <div class="choices">
+      <button data-choice="tacos">tacos</button>
+      <button data-choice="burritos">burritos</button>
+    </div>
+    <p id="status" role="status"></p>
+
+    <h2>Live results</h2>
+    <ul id="results"><li>loading...</li></ul>
+    <p id="updated" class="muted"></p>
+  </main>
+
+  <script>
+    window.VOTING_CONFIG = {
+      voteApi:    "http://localhost:8081",
+      resultsApi: "http://localhost:8082",
+      pollId:     "default"
+    };
+  </script>
+  <script src="/app.js"></script>
+</body>
+</html>
