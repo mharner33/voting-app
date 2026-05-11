@@ -51,5 +51,26 @@ services:
     labels:
       com.datadoghq.ad.logs: '[{"source":"go","service":"vote-api"}]'
 
+  tally-worker:
+    build:
+      context: .
+      dockerfile: tally-worker/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      POSTGRES_DSN: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable"
+      TALLY_INTERVAL: "${TALLY_INTERVAL}"
+      DD_SERVICE: "tally-worker"
+      DD_ENV: "${DD_ENV}"
+      DD_VERSION: "${DD_VERSION}"
+      DD_AGENT_HOST: "datadog-agent"
+      DD_TRACE_AGENT_PORT: "8126"
+      DD_DOGSTATSD_PORT: "8125"
+    labels:
+      com.datadoghq.ad.logs: '[{"source":"go","service":"tally-worker"}]'
+
 volumes:
   pgdata:
