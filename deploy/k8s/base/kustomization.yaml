@@ -15,6 +15,10 @@ resources:
   - vote-api/deployment.yaml
   - vote-api/service.yaml
   - vote-api/backendconfig.yaml
+  - results-api/serviceaccount.yaml
+  - results-api/deployment.yaml
+  - results-api/service.yaml
+  - results-api/backendconfig.yaml
 
 configMapGenerator:
   - name: app-config
