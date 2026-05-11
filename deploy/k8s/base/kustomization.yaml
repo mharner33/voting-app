@@ -8,6 +8,8 @@ commonLabels:
 
 resources:
   - namespace.yaml
+  - postgres/statefulset.yaml
+  - postgres/service.yaml
 
 configMapGenerator:
   - name: app-config
