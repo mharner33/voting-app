@@ -25,6 +25,7 @@ resources:
   - frontend/service.yaml
   - frontend/backendconfig.yaml
   - ingress/ingress.yaml
+  - datadog/datadogagent.yaml
 
 configMapGenerator:
   - name: app-config
