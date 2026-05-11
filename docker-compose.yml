@@ -95,5 +95,15 @@ services:
     labels:
       com.datadoghq.ad.logs: '[{"source":"go","service":"results-api"}]'
 
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - vote-api
+      - results-api
+
 volumes:
   pgdata:
