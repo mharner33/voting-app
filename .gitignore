@@ -1,1 +1,21 @@
+# Go
+*.exe
+*.test
+*.out
+/bin/
+/dist/
+
+# Env / secrets
+.env
+.env.*.local
+
+# Editor
+.idea/
+.vscode/
+*.swp
+
+# Docker
+docker-compose.override.yml
+
+# Worktrees
 .worktrees/
