@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vote-api
+  labels:
+    app.kubernetes.io/name: vote-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vote-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: vote-api
+        tags.datadoghq.com/service: vote-api
+      annotations:
+        ad.datadoghq.com/vote-api.logs: |
+          [{"source":"go","service":"vote-api"}]
+    spec:
+      serviceAccountName: vote-api
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: vote-api
+          image: docker.io/votingapp/vote-api:dev   # overridden per overlay
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: HTTP_ADDR
+              value: ":8080"
+            - name: POSTGRES_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_DSN
+            - name: DD_SERVICE
+              value: vote-api
+            - name: DD_AGENT_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: DD_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DD_ENV
+            - name: DD_VERSION
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DD_VERSION
+            - name: DD_TRACE_AGENT_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DD_TRACE_AGENT_PORT
+            - name: DD_DOGSTATSD_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DD_DOGSTATSD_PORT
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]

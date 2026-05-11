@@ -11,6 +11,10 @@ resources:
   - postgres/statefulset.yaml
   - postgres/service.yaml
   - migrations/job.yaml
+  - vote-api/serviceaccount.yaml
+  - vote-api/deployment.yaml
+  - vote-api/service.yaml
+  - vote-api/backendconfig.yaml
 
 configMapGenerator:
   - name: app-config
