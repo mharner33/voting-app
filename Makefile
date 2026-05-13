@@ -1,7 +1,7 @@
-.PHONY: up down logs ps test tidy fmt vet build smoke k8s-build k8s-up k8s-smoke k8s-down
+.PHONY: up down logs ps test tidy fmt vet build smoke up-temporal down-temporal smoke-temporal k8s-build k8s-up k8s-smoke k8s-down
 
 up:
-	podman compose up -d --build
+	podman compose --profile baseline up -d --build
 
 down:
 	podman compose down -v
@@ -18,13 +18,14 @@ test:
 	go test ./... -count=1
 
 tidy:
-	cd shared      && go mod tidy
-	cd vote-api    && go mod tidy
-	cd tally-worker && go mod tidy
-	cd results-api && go mod tidy
+	cd shared                && go mod tidy
+	cd vote-api              && go mod tidy
+	cd tally-worker          && go mod tidy
+	cd tally-worker-temporal && go mod tidy
+	cd results-api           && go mod tidy
 
 fmt:
-	gofmt -w shared vote-api tally-worker results-api
+	gofmt -w shared vote-api tally-worker tally-worker-temporal results-api
 
 vet:
 	go vet ./...
@@ -34,6 +35,15 @@ build:
 
 smoke:
 	./scripts/smoke.sh
+
+up-temporal:
+	podman compose --profile temporal up -d --build
+
+down-temporal:
+	podman compose --profile temporal down -v
+
+smoke-temporal:
+	./scripts/smoke-temporal.sh
 
 .PHONY: k8s-build k8s-up k8s-smoke k8s-down
 

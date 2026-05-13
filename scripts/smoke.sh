@@ -7,13 +7,13 @@ cd "$(dirname "$0")/.."
 export DOCKER_HOST="${DOCKER_HOST:-unix:///run/user/$(id -u)/podman/podman.sock}"
 export TESTCONTAINERS_RYUK_DISABLED=true
 
-cleanup() { podman compose down -v >/dev/null 2>&1 || true; }
+cleanup() { podman compose --profile baseline down -v >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 
 cleanup
-podman compose up -d --build postgres
-podman compose run --rm migrate
-podman compose up -d --build vote-api tally-worker results-api
+podman compose --profile baseline up -d --build postgres
+podman compose --profile baseline run --rm migrate
+podman compose --profile baseline up -d --build vote-api tally-worker results-api
 
 # wait for vote-api readiness
 for i in $(seq 1 30); do
