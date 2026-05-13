@@ -4,7 +4,7 @@ up:
 	podman compose --profile baseline up -d --build
 
 down:
-	podman compose down -v
+	podman compose --profile baseline --profile temporal down -v
 
 logs:
 	podman compose logs -f --tail=100
