@@ -1,8 +1,22 @@
-(function () {
-  const cfg = window.VOTING_CONFIG;
+(async function () {
   const statusEl = document.getElementById("status");
   const resultsEl = document.getElementById("results");
   const updatedEl = document.getElementById("updated");
+  const promptEl = document.getElementById("prompt");
+  const choicesEl = document.querySelector(".choices");
+
+  let cfg;
+  try {
+    cfg = await fetch("/config.json").then((r) => {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    });
+  } catch (e) {
+    statusEl.textContent = "config error: " + e.message;
+    return;
+  }
+
+  promptEl.textContent = cfg.heading;
 
   function newId() {
     if (window.crypto && typeof crypto.randomUUID === "function") {
@@ -27,10 +41,10 @@
   async function castVote(choice) {
     statusEl.textContent = "submitting...";
     try {
-      const r = await fetch(cfg.voteApi + "/vote", {
+      const r = await fetch("/vote", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ poll_id: cfg.pollId, choice, user_id: userId() }),
+        body: JSON.stringify({ poll_id: cfg.poll_id, choice, user_id: userId() }),
       });
       if (!r.ok) throw new Error("HTTP " + r.status);
       statusEl.textContent = "vote recorded for " + choice;
@@ -41,7 +55,7 @@
 
   async function refreshResults() {
     try {
-      const r = await fetch(cfg.resultsApi + "/results?poll_id=" + encodeURIComponent(cfg.pollId));
+      const r = await fetch("/results?poll_id=" + encodeURIComponent(cfg.poll_id));
       if (!r.ok) throw new Error("HTTP " + r.status);
       const data = await r.json();
       resultsEl.innerHTML = "";
@@ -60,8 +74,12 @@
     }
   }
 
-  document.querySelectorAll(".choices button").forEach((btn) => {
-    btn.addEventListener("click", () => castVote(btn.dataset.choice));
+  cfg.choices.forEach((choice) => {
+    const btn = document.createElement("button");
+    btn.textContent = choice;
+    btn.dataset.choice = choice;
+    btn.addEventListener("click", () => castVote(choice));
+    choicesEl.appendChild(btn);
   });
 
   refreshResults();

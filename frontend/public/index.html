@@ -8,11 +8,8 @@
 <body>
   <main>
     <h1>Vote</h1>
-    <p>Default poll: choose one.</p>
-    <div class="choices">
-      <button data-choice="tacos">tacos</button>
-      <button data-choice="burritos">burritos</button>
-    </div>
+    <p id="prompt"></p>
+    <div class="choices"></div>
     <p id="status" role="status"></p>
 
     <h2>Live results</h2>
@@ -20,13 +17,6 @@
     <p id="updated" class="muted"></p>
   </main>
 
-  <script>
-    window.VOTING_CONFIG = {
-      voteApi:    "",
-      resultsApi: "",
-      pollId:     "default"
-    };
-  </script>
   <script src="/app.js"></script>
 </body>
 </html>
