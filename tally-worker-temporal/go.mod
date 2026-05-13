@@ -3,8 +3,10 @@ module github.com/mharner33/voting-app/tally-worker-temporal
 go 1.25.1
 
 require (
+	github.com/mharner33/voting-app/shared v0.0.0-00010101000000-000000000000
 	github.com/mharner33/voting-app/tally-worker v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.11.1
+	go.opentelemetry.io/otel v1.43.0
 	go.temporal.io/sdk v1.43.0
 )
 
@@ -56,7 +58,6 @@ require (
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/linkdata/deadlock v0.5.5 // indirect
 	github.com/lufia/plan9stats v0.0.0-20260216142805-b3301c5f2a88 // indirect
-	github.com/mharner33/voting-app/shared v0.0.0-00010101000000-000000000000 // indirect
 	github.com/minio/simdjson-go v0.4.5 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee // indirect
@@ -83,7 +84,6 @@ require (
 	go.opentelemetry.io/collector/featuregate v1.51.1-0.20260205185216-81bc641f26c0 // indirect
 	go.opentelemetry.io/collector/pdata v1.51.1-0.20260205185216-81bc641f26c0 // indirect
 	go.opentelemetry.io/collector/pdata/pprofile v0.145.1-0.20260205185216-81bc641f26c0 // indirect
-	go.opentelemetry.io/otel v1.43.0 // indirect
 	go.opentelemetry.io/otel/metric v1.43.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.43.0 // indirect
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
