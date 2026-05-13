@@ -5,9 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"path/filepath"
 	"testing"
+	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/require"
+	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"go.temporal.io/sdk/testsuite"
 
 	"github.com/mharner33/voting-app/shared/obs"
@@ -70,4 +74,75 @@ func TestTallyActivity_PropagatesAggregatorError(t *testing.T) {
 	_, err := env.ExecuteActivity(a.Run)
 	require.Error(t, err)
 	require.Equal(t, 1, agg.calls)
+}
+
+func TestTallyActivity_AgainstRealPostgres_MatchesBaselineAggregator(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+	t.Cleanup(cancel)
+
+	migDir, err := filepath.Abs("../../../migrations")
+	require.NoError(t, err)
+
+	pg, err := postgres.Run(ctx, "postgres:16-alpine",
+		postgres.WithDatabase("voting"),
+		postgres.WithUsername("voting"),
+		postgres.WithPassword("voting"),
+		postgres.WithInitScripts(
+			filepath.Join(migDir, "0001_create_votes.up.sql"),
+			filepath.Join(migDir, "0002_create_vote_results.up.sql"),
+		),
+		postgres.BasicWaitStrategies(),
+	)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = pg.Terminate(context.Background()) })
+
+	dsn, err := pg.ConnectionString(ctx, "sslmode=disable")
+	require.NoError(t, err)
+	pool, err := pgxpool.New(ctx, dsn)
+	require.NoError(t, err)
+	t.Cleanup(pool.Close)
+
+	// Seed 3 tacos, 1 burrito.
+	for _, v := range [][3]string{
+		{"smoke", "tacos", "u1"},
+		{"smoke", "tacos", "u2"},
+		{"smoke", "tacos", "u3"},
+		{"smoke", "burritos", "v1"},
+	} {
+		_, err := pool.Exec(ctx,
+			`INSERT INTO votes (poll_id, choice, user_id) VALUES ($1,$2,$3)`,
+			v[0], v[1], v[2])
+		require.NoError(t, err)
+	}
+
+	a := &activity.TallyActivity{
+		Agg: tally.NewAggregator(pool),
+		Log: obs.NewLogger(obs.LoggerConfig{Service: "test", Env: "test", Version: "0"}),
+	}
+
+	env := newActivityEnv(t, a)
+
+	val, err := env.ExecuteActivity(a.Run)
+	require.NoError(t, err)
+
+	var stats tally.Stats
+	require.NoError(t, val.Get(&stats))
+	require.Equal(t, 2, stats.RowsUpserted)
+	require.Equal(t, 1, stats.PollsTouched)
+
+	type row struct {
+		choice string
+		count  int
+	}
+	var rows []row
+	q, err := pool.Query(ctx,
+		`SELECT choice, count FROM vote_results WHERE poll_id='smoke' ORDER BY choice`)
+	require.NoError(t, err)
+	defer q.Close()
+	for q.Next() {
+		var r row
+		require.NoError(t, q.Scan(&r.choice, &r.count))
+		rows = append(rows, r)
+	}
+	require.Equal(t, []row{{"burritos", 1}, {"tacos", 3}}, rows)
 }
