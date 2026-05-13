@@ -50,7 +50,7 @@ The system is intentionally split into small services so observability signals c
 ## When implementing
 
 - Follow the HTTP shapes, table schema, and metric names exactly as specified in the architecture doc — downstream dashboards and alerts (§5.4) assume them.
-- Configuration is environment-variable driven: DB DSN; Datadog SDK vars (`DD_AGENT_HOST`, `DD_TRACE_AGENT_PORT`, `DD_SERVICE`, `DD_ENV`, `DD_VERSION`); worker tuning (`TALLY_INTERVAL`, default `5s`); Temporal (`TEMPORAL_NAMESPACE`) when that variant is enabled. Don't hardcode any of these.
+- Configuration is environment-variable driven: DB DSN; Datadog SDK vars (`DD_AGENT_HOST`, `DD_TRACE_AGENT_PORT`, `DD_SERVICE`, `DD_ENV`, `DD_VERSION`); worker tuning (`TALLY_INTERVAL`, default `5s`); Temporal (`TEMPORAL_NAMESPACE`) when that variant is enabled; frontend runtime config (`VOTING_CHOICES`, `VOTING_POLL_ID`, `VOTING_HEADING`). Don't hardcode any of these.
 - Local orchestration is intended to be `docker-compose` with all components (services + postgres + datadog-agent + optional temporal/temporal-ui). The Datadog Agent receives traces and metrics directly from each service — there is no separate OTel Collector container. When you add a service, add it to the compose file at the same time.
 
 ## Updating this file
