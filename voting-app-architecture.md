@@ -226,15 +226,15 @@ There are two implementation variants; both share the same business logic.
 
 **Responsibilities**
 
-- Host Temporal Workflows and Activities, e.g.:
-  - `TallyWorkflow(pollID string)`
-  - `ReadVotesActivity`, `AggregateVotesActivity`, `PersistResultsActivity`
+- Host one Temporal Workflow and one Activity:
+  - `TallyWorkflow()` — calls `TallyActivity`, returns its `Stats`.
+  - `TallyActivity` — thin wrapper around the existing `tally.Aggregator` (imported from `tally-worker/tally`). A single activity preserves the single-Postgres-transaction idempotency property of the baseline; splitting the SELECT and UPSERT across activities would move the transactional boundary into the workflow.
 
 **Behavior**
 
 - **Task queue:** `tally-task-queue`. Workers register the Workflow + Activities on this queue; clients (and the Temporal Schedule below) target the same queue when starting Workflows.
-- **Workflow ID strategy:** for scheduled runs, the Temporal Schedule owns the per-run suffix and the base ID is `tally-{poll_id}`. For ad-hoc runs (manual trigger, signal-driven), use `tally-{poll_id}-{RFC3339-timestamp}`. Set `WorkflowIDReusePolicy: AllowDuplicate` so successive runs don't collide with completed history.
-- **Schedule mechanism:** Temporal Schedules (server-managed). Schedule ID `tally-{poll_id}`; interval matches the baseline worker (e.g., every 5 seconds). No external cron, no `continue-as-new` loop.
+- **Workflow ID strategy:** the Temporal Schedule owns the per-run suffix; the base ID is `tally-all`. Each firing produces a `WorkflowID` of the form `tally-all-<RFC3339>` so successive runs don't collide with completed history.
+- **Schedule mechanism:** Temporal Schedules (server-managed). Single global Schedule with ID `tally-all`; interval matches the baseline worker (default 5 seconds). One workflow per tick aggregates all polls — same shape as the baseline. Per-poll scheduling is a possible v2 once polls become first-class entities in the schema. No external cron, no `continue-as-new` loop.
 - **Namespace:** single namespace, configurable via `TEMPORAL_NAMESPACE` (default `default`).
 - Temporal guarantees:
   - Durable execution across worker restarts.

@@ -44,6 +44,29 @@ The `Makefile` shells out to `podman compose` by default; substitute `docker com
 
 Useful extras: `make logs` tails everything, `make ps` lists containers, `make test` runs the Go suite (requires the Docker/podman socket so testcontainers can spin up Postgres).
 
+### Temporal variant
+
+The repo ships two mutually exclusive `tally-worker` variants behind compose profiles:
+
+| Profile | Worker | Schedule mechanism |
+| --- | --- | --- |
+| `baseline` (default for `make up`) | `tally-worker` | Go timer loop, every `TALLY_INTERVAL` |
+| `temporal` | `tally-worker-temporal` | Temporal Schedule `tally-all`, every `TALLY_INTERVAL` |
+
+```bash
+# Temporal variant
+make up-temporal
+# Temporal UI: http://localhost:8233
+# Temporal gRPC: localhost:7233
+
+make smoke-temporal   # end-to-end check
+make down-temporal
+```
+
+Running both profiles at the same time is **not supported** — both workers would race on `vote_results` upserts. The Makefile targets keep them separate; if you bypass them and invoke `podman compose` directly, pass exactly one `--profile`.
+
+The Temporal server is `temporalio/auto-setup` (server + persistence in one container) — convenient for the demo, not production-shaped. Server metrics flow into Datadog via the `temporal.*` namespace through an OpenMetrics scrape of `http://temporal:9090/metrics`.
+
 ### Datadog Postgres integration
 
 The Datadog Agent loads the Postgres check from `datadog/postgres.d/conf.yaml`, mounted into the agent at `/etc/datadog-agent/conf.d/postgres.d/conf.yaml`. The monitoring role is created on first init of the postgres data volume by `scripts/postgres-init/datadog.sh`, using `DD_POSTGRES_USER` / `DD_POSTGRES_PASSWORD` from `.env`. See [Datadog's Postgres integration docs](https://docs.datadoghq.com/integrations/postgres/?tab=docker) for the upstream setup.

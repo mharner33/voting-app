@@ -23,7 +23,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Integration tests for the data path (`vote-api/internal/store`, `tally-worker/tally`, `results-api/internal/store`) use `testcontainers-go/postgres` and **require a running Docker daemon**. Pure-handler tests (`vote-api/internal/handler`, `results-api/internal/handler`) and `shared/` tests don't.
 
-Temporal variant (§4.4.2) is **not implemented** — see `docs/superpowers/plans/` for that follow-up plan when it lands.
+Temporal variant is implemented as `tally-worker-temporal/` (separate Go module) behind the `temporal` compose profile. `make up-temporal` brings it up; `make smoke-temporal` exercises it end-to-end. The baseline `tally-worker` lives on the `baseline` profile and remains the default for `make up`.
 
 ## Architecture (planned)
 
