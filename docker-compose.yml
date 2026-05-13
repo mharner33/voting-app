@@ -5,10 +5,13 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+      DD_POSTGRES_USER: ${DD_POSTGRES_USER}
+      DD_POSTGRES_PASSWORD: ${DD_POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./scripts/postgres-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 2s
@@ -133,6 +136,11 @@ services:
       - /run/user/1000/podman/podman.sock:/var/run/docker.sock:ro
       - /proc/:/host/proc/:ro
       - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+      # Postgres integration. Autodiscovery via container labels doesn't work
+      # under podman-machine (the agent can't read the docker socket), so
+      # configure the check statically. ${VAR} placeholders are expanded from
+      # the agent container's environment at load time.
+      - ./datadog/postgres.d/conf.yaml:/etc/datadog-agent/conf.d/postgres.d/conf.yaml:ro
     ports:
       - "8125:8125/udp"
       - "8126:8126"

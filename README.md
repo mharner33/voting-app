@@ -20,7 +20,7 @@ The `Makefile` shells out to `podman compose` by default; substitute `docker com
    $EDITOR .env   # set DD_API_KEY=...
    ```
 
-   `.env` must define **every** key from `.env.example` — `DD_API_KEY`, `DD_SITE`, `DD_ENV`, `DD_VERSION`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, and `TALLY_INTERVAL`. The compose file passes them through to the containers, and the official `postgres` image refuses to start if `POSTGRES_PASSWORD` is empty. Only `DD_API_KEY` needs editing; the rest can keep the defaults shipped in the template.
+   `.env` must define **every** key from `.env.example` — `DD_API_KEY`, `DD_SITE`, `DD_ENV`, `DD_VERSION`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `DD_POSTGRES_USER`, `DD_POSTGRES_PASSWORD`, and `TALLY_INTERVAL`. The compose file passes them through to the containers, and the official `postgres` image refuses to start if `POSTGRES_PASSWORD` is empty. Only `DD_API_KEY` needs editing; the rest can keep the defaults shipped in the template.
 
 2. **Build images and bring the stack up:**
 
@@ -43,6 +43,14 @@ The `Makefile` shells out to `podman compose` by default; substitute `docker com
    ```
 
 Useful extras: `make logs` tails everything, `make ps` lists containers, `make test` runs the Go suite (requires the Docker/podman socket so testcontainers can spin up Postgres).
+
+### Datadog Postgres integration
+
+The Datadog Agent loads the Postgres check from `datadog/postgres.d/conf.yaml`, mounted into the agent at `/etc/datadog-agent/conf.d/postgres.d/conf.yaml`. The monitoring role is created on first init of the postgres data volume by `scripts/postgres-init/datadog.sh`, using `DD_POSTGRES_USER` / `DD_POSTGRES_PASSWORD` from `.env`. See [Datadog's Postgres integration docs](https://docs.datadoghq.com/integrations/postgres/?tab=docker) for the upstream setup.
+
+> The doc's recommended Autodiscovery-via-container-labels mechanism didn't work under podman-machine here — the agent couldn't read the container socket. The static `conf.d` file does not depend on the socket and works in either runtime. The agent doesn't expand `${...}` in static `conf.d` files (that's Autodiscovery-only), so the credentials in `conf.yaml` are hardcoded and must stay in sync with the `DD_POSTGRES_*` entries in `.env`.
+
+The init script only runs against an empty data directory. If you've already started the stack against an existing `pgdata` volume, run `make down` (which removes the volume) before `make up` so the role gets created.
 
 The frontend's API calls are relative (`/vote`, `/results`) and nginx proxies them to the sibling services inside the compose network — same routing model as the Ingress in production.
 

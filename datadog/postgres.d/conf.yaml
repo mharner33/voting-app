@@ -1,0 +1,11 @@
+# Keep these values in sync with DD_POSTGRES_USER / DD_POSTGRES_PASSWORD /
+# POSTGRES_DB in .env. The Datadog Agent doesn't expand ${...} in static
+# conf.d files (that's an Autodiscovery-only feature), so they're hardcoded.
+init_config:
+
+instances:
+  - host: postgres
+    port: 5432
+    username: datadog
+    password: password123
+    dbname: voting
