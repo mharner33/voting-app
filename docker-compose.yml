@@ -147,11 +147,30 @@ services:
       - "8125:8125/udp"
       - "8126:8126"
 
-  temporal:
-    image: temporalio/auto-setup:1.25
+  temporal-postgres:
+    image: postgres:16-alpine
     profiles: ["temporal"]
     environment:
+      POSTGRES_USER: temporal
+      POSTGRES_PASSWORD: temporal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U temporal"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  temporal:
+    image: temporalio/auto-setup:1.29
+    profiles: ["temporal"]
+    depends_on:
+      temporal-postgres:
+        condition: service_healthy
+    environment:
       DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_USER: temporal
+      POSTGRES_PWD: temporal
+      POSTGRES_SEEDS: temporal-postgres
       PROMETHEUS_ENDPOINT: "0.0.0.0:9090"
       TEMPORAL_ADDRESS: "temporal:7233"
     ports:
@@ -164,7 +183,7 @@ services:
       retries: 30
 
   temporal-ui:
-    image: temporalio/ui:2.31
+    image: temporalio/ui:2.49.1
     profiles: ["temporal"]
     environment:
       TEMPORAL_ADDRESS: "temporal:7233"

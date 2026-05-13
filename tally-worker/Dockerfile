@@ -5,6 +5,7 @@ COPY go.work go.work.sum* ./
 COPY shared/ ./shared/
 COPY vote-api/ ./vote-api/
 COPY tally-worker/ ./tally-worker/
+COPY tally-worker-temporal/ ./tally-worker-temporal/
 COPY results-api/ ./results-api/
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg/mod \
