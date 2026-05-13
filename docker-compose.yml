@@ -116,6 +116,10 @@ services:
     environment:
       DD_API_KEY: "${DD_API_KEY}"
       DD_SITE: "${DD_SITE}"
+      # Skip hostname auto-detection (the podman-machine setup has no usable
+      # docker socket, so the agent otherwise exits with "unable to reliably
+      # determine the host name").
+      DD_HOSTNAME: "voting-app-local"
       DD_APM_ENABLED: "true"
       DD_APM_NON_LOCAL_TRAFFIC: "true"
       DD_DOGSTATSD_NON_LOCAL_TRAFFIC: "true"
