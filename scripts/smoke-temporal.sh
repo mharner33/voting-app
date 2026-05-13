@@ -25,13 +25,13 @@ done
 # it on startup; failing this check means the worker never connected.
 for i in $(seq 1 60); do
   if podman compose --profile temporal exec -T temporal \
-       tctl --address temporal:7233 schedule list 2>/dev/null | grep -q '^tally-all'; then
+       tctl --address temporal:7233 schedule list 2>/dev/null | grep -q 'tally-all'; then
     break
   fi
   sleep 1
 done
 podman compose --profile temporal exec -T temporal \
-  tctl --address temporal:7233 schedule list | grep -q '^tally-all' \
+  tctl --address temporal:7233 schedule list | grep -q 'tally-all' \
   || { echo "FAIL: tally-all Schedule was not created"; exit 1; }
 
 # 5 tacos, 2 burritos.

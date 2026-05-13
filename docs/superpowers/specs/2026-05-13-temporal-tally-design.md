@@ -51,7 +51,7 @@ tally-worker-temporal/
 3. Open pgx pool via `shared/pgxdb`.
 4. Construct Temporal client (`go.temporal.io/sdk/client`) against `${TEMPORAL_HOST_PORT}` in namespace `${TEMPORAL_NAMESPACE}`.
 5. Call `schedule.EnsureTallySchedule(ctx, client, interval)` — idempotent create-or-update of the `tally-all` Schedule.
-6. Construct a Worker on `${TEMPORAL_TASK_QUEUE}` with the Datadog tracing interceptor (`go.temporal.io/sdk/contrib/datadog`).
+6. Construct a Worker on `${TEMPORAL_TASK_QUEUE}` with the Datadog tracing interceptor (`go.temporal.io/sdk/contrib/opentelemetry`).
 7. Register `TallyWorkflow` and `TallyActivity{Pool: pool}`.
 8. Run the Worker under `obs.RunUntilSignal`, so `SIGTERM`/`SIGINT` triggers worker stop → pool close → tracing shutdown.
 
@@ -201,7 +201,7 @@ TallyActivity (tally-worker-temporal process)
 ### 7.1 App-side tracing
 
 - `dd-trace-go` initialized via `shared/obs.StartTracing`, identical to baseline.
-- Temporal SDK Datadog interceptor (`go.temporal.io/sdk/contrib/datadog`) registered on the Worker so workflow and activity boundaries get spans automatically and span context flows from workflow → activity.
+- Temporal SDK Datadog interceptor (`go.temporal.io/sdk/contrib/opentelemetry`) registered on the Worker so workflow and activity boundaries get spans automatically and span context flows from workflow → activity.
 - Inside `TallyActivity`: explicit `otel` span `tally.activity` for symmetry with the baseline; the underlying `tally.run` and `SELECT`/`UPSERT` spans come from the existing aggregator unchanged.
 
 ### 7.2 App-side metrics
@@ -212,11 +212,9 @@ Emitted from inside `TallyActivity` (so a retried attempt counts as a separate r
 - `tally_duration_seconds`
 - `tally_last_success_timestamp`
 
-Emitted once per workflow completion (regardless of activity retry count):
+Per-workflow-completion counts come from the Temporal server's own metrics scraped via OpenMetrics (`temporal.workflow_*` series), which is more accurate than emitting app-side — the server is the source of truth for completed workflows.
 
-- `tally_workflow_runs_total{status=success|error}` — new, distinguishes "Schedule fired" from "activity attempted."
-
-All metrics tagged with `service:tally-worker-temporal` via `DD_SERVICE`, so they don't collide with baseline metrics in Datadog.
+All app-side metrics tagged with `service:tally-worker-temporal` via `DD_SERVICE`, so they don't collide with baseline metrics in Datadog.
 
 ### 7.3 Logs
 

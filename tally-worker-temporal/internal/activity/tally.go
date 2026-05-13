@@ -23,9 +23,9 @@ type Aggregator interface {
 // (kept in lockstep with workflow.TallyActivityName).
 //
 // Metrics are emitted *per attempt* (matching baseline semantics), so a
-// retried activity counts as N runs in `tally_runs_total`. The wrapping
-// workflow's completion is counted separately by main.go via the
-// `tally_workflow_runs_total` series.
+// retried activity counts as N runs in `tally_runs_total`. Per-workflow-
+// completion counts come from the Temporal server's own metrics, scraped
+// into Datadog via OpenMetrics (`temporal.workflow_*` series).
 type TallyActivity struct {
 	Agg     Aggregator
 	Log     *obs.Logger
