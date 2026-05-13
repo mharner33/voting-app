@@ -109,15 +109,15 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+    depends_on:
+      - vote-api
+      - results-api
     environment:
       VOTING_CHOICES: "${VOTING_CHOICES:-tacos,burritos}"
       VOTING_POLL_ID: "${VOTING_POLL_ID:-default}"
       VOTING_HEADING: "${VOTING_HEADING:-Default poll: choose one.}"
     ports:
       - "8080:8080"
-    depends_on:
-      - vote-api
-      - results-api
 
   datadog-agent:
     image: gcr.io/datadoghq/agent:7
