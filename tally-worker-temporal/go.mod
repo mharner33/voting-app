@@ -11,6 +11,7 @@ require (
 	go.opentelemetry.io/otel v1.43.0
 	go.temporal.io/api v1.62.11
 	go.temporal.io/sdk v1.43.0
+	go.temporal.io/sdk/contrib/opentelemetry v0.7.0
 )
 
 require (
@@ -53,6 +54,7 @@ require (
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/ebitengine/purego v0.10.0 // indirect
+	github.com/exaring/otelpgx v0.10.0 // indirect
 	github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
