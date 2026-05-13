@@ -1,0 +1,16 @@
+# Scrape Temporal's Prometheus endpoint when the temporal profile is up.
+# When temporal isn't running the check fails its scrape and logs a
+# warning; the rest of the agent is unaffected.
+init_config:
+
+instances:
+  - openmetrics_endpoint: http://temporal:9090/metrics
+    namespace: temporal
+    metrics:
+      - temporal_request*
+      - temporal_workflow*
+      - temporal_activity*
+      - temporal_poll*
+      - temporal_persistence*
+    tags:
+      - service:temporal
