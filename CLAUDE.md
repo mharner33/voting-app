@@ -21,7 +21,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | End-to-end smoke test | `make smoke` |
 | Per-service test | `cd <service> && go test ./... -timeout 120s` |
 
-Integration tests for the data path (`vote-api/internal/store`, `tally-worker/internal/tally`, `results-api/internal/store`) use `testcontainers-go/postgres` and **require a running Docker daemon**. Pure-handler tests (`vote-api/internal/handler`, `results-api/internal/handler`) and `shared/` tests don't.
+Integration tests for the data path (`vote-api/internal/store`, `tally-worker/tally`, `results-api/internal/store`) use `testcontainers-go/postgres` and **require a running Docker daemon**. Pure-handler tests (`vote-api/internal/handler`, `results-api/internal/handler`) and `shared/` tests don't.
 
 Temporal variant (§4.4.2) is **not implemented** — see `docs/superpowers/plans/` for that follow-up plan when it lands.
 

@@ -4,5 +4,6 @@ use (
 	./results-api
 	./shared
 	./tally-worker
+	./tally-worker-temporal
 	./vote-api
 )

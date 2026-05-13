@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mharner33/voting-app/shared/obs"
-	"github.com/mharner33/voting-app/tally-worker/internal/tally"
+	"github.com/mharner33/voting-app/tally-worker/tally"
 )
 
 type fakeAgg struct {

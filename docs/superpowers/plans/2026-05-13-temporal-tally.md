@@ -4,7 +4,7 @@
 
 **Goal:** Add a Temporal-driven variant of `tally-worker` (new `tally-worker-temporal/` module) gated behind a `temporal` compose profile, plus `temporalio/auto-setup` + `temporalio/ui` containers and a Datadog OpenMetrics scrape of Temporal server metrics. The baseline `tally-worker` must keep working unchanged under a new `baseline` profile.
 
-**Architecture:** A new Go module is a thin Temporal worker that registers `TallyWorkflow` + a single `TallyActivity` on the `tally-task-queue`. The activity calls the existing `tally.Aggregator` (imported from `tally-worker/internal/tally`) so business logic and the single-Postgres-transaction property are preserved verbatim. At startup the worker idempotently ensures a single global Schedule `tally-all` exists with interval `TALLY_INTERVAL`.
+**Architecture:** A new Go module is a thin Temporal worker that registers `TallyWorkflow` + a single `TallyActivity` on the `tally-task-queue`. The activity calls the existing `tally.Aggregator` (imported from `tally-worker/tally`) so business logic and the single-Postgres-transaction property are preserved verbatim. At startup the worker idempotently ensures a single global Schedule `tally-all` exists with interval `TALLY_INTERVAL`.
 
 **Tech Stack:** Go 1.25, `go.temporal.io/sdk` (Temporal Go SDK), `go.temporal.io/sdk/contrib/opentelemetry` (interceptor that plugs into the existing OTel API wired to `dd-trace-go`), pgx, testcontainers-go/postgres, `temporalio/auto-setup` + `temporalio/ui` images, Datadog Agent OpenMetrics integration.
 
@@ -160,7 +160,7 @@ import (
 	"go.temporal.io/sdk/testsuite"
 
 	"github.com/mharner33/voting-app/tally-worker-temporal/internal/workflow"
-	"github.com/mharner33/voting-app/tally-worker/internal/tally"
+	"github.com/mharner33/voting-app/tally-worker/tally"
 )
 
 func TestTallyWorkflow_CallsActivityAndReturnsStats(t *testing.T) {
@@ -236,7 +236,7 @@ import (
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 
-	"github.com/mharner33/voting-app/tally-worker/internal/tally"
+	"github.com/mharner33/voting-app/tally-worker/tally"
 )
 
 // TallyActivityName is the registered name of the tally activity.
@@ -317,7 +317,7 @@ import (
 
 	"github.com/mharner33/voting-app/shared/obs"
 	"github.com/mharner33/voting-app/tally-worker-temporal/internal/activity"
-	"github.com/mharner33/voting-app/tally-worker/internal/tally"
+	"github.com/mharner33/voting-app/tally-worker/tally"
 )
 
 type fakeAgg struct {
@@ -402,7 +402,7 @@ import (
 	temporalactivity "go.temporal.io/sdk/activity"
 
 	"github.com/mharner33/voting-app/shared/obs"
-	"github.com/mharner33/voting-app/tally-worker/internal/tally"
+	"github.com/mharner33/voting-app/tally-worker/tally"
 )
 
 // Aggregator is the interface TallyActivity needs from the underlying
@@ -626,7 +626,7 @@ import (
 
 	"github.com/mharner33/voting-app/shared/obs"
 	"github.com/mharner33/voting-app/tally-worker-temporal/internal/activity"
-	"github.com/mharner33/voting-app/tally-worker/internal/tally"
+	"github.com/mharner33/voting-app/tally-worker/tally"
 )
 ```
 
@@ -843,7 +843,7 @@ import (
 	"github.com/mharner33/voting-app/tally-worker-temporal/internal/activity"
 	"github.com/mharner33/voting-app/tally-worker-temporal/internal/schedule"
 	tw "github.com/mharner33/voting-app/tally-worker-temporal/internal/workflow"
-	"github.com/mharner33/voting-app/tally-worker/internal/tally"
+	"github.com/mharner33/voting-app/tally-worker/tally"
 )
 
 const workflowName = "TallyWorkflow"
@@ -1555,7 +1555,7 @@ Replace it with:
 ```
 - Host one Temporal Workflow and one Activity:
   - `TallyWorkflow()` — calls `TallyActivity`, returns its `Stats`.
-  - `TallyActivity` — thin wrapper around the existing `tally.Aggregator` (imported from `tally-worker/internal/tally`). A single activity preserves the single-Postgres-transaction idempotency property of the baseline; splitting the SELECT and UPSERT across activities would move the transactional boundary into the workflow.
+  - `TallyActivity` — thin wrapper around the existing `tally.Aggregator` (imported from `tally-worker/tally`). A single activity preserves the single-Postgres-transaction idempotency property of the baseline; splitting the SELECT and UPSERT across activities would move the transactional boundary into the workflow.
 ```
 
 In the same file, find:

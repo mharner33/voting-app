@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 
-	"github.com/mharner33/voting-app/tally-worker/internal/tally"
+	"github.com/mharner33/voting-app/tally-worker/tally"
 )
 
 func startPG(t *testing.T) *pgxpool.Pool {
@@ -18,7 +18,7 @@ func startPG(t *testing.T) *pgxpool.Pool {
 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	t.Cleanup(cancel)
 
-	migDir, err := filepath.Abs("../../../migrations")
+	migDir, err := filepath.Abs("../../migrations")
 	require.NoError(t, err)
 
 	pg, err := postgres.Run(ctx, "postgres:16-alpine",

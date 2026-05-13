@@ -87,7 +87,7 @@ func (a *TallyActivity) Run(ctx context.Context) (tally.Stats, error) {
 }
 ```
 
-The `tally` package is imported directly from `github.com/mharner33/voting-app/tally-worker/internal/tally` — it is the canonical implementation and stays in the baseline module.
+The `tally` package is imported directly from `github.com/mharner33/voting-app/tally-worker/tally` — it is the canonical implementation and stays in the baseline module.
 
 **`internal/schedule/ensure.go`** — `EnsureTallySchedule(ctx, client, interval)`:
 
@@ -184,7 +184,7 @@ WorkflowExecution (TallyWorkflow)
 TallyActivity (tally-worker-temporal process)
    │
    ├─ otel span "tally.activity"  (child of workflow span via DD interceptor)
-   ├─ aggregator.Run(ctx)         (imported from tally-worker/internal/tally)
+   ├─ aggregator.Run(ctx)         (imported from tally-worker/tally)
    │     └─ single Postgres tx: SELECT … GROUP BY → UPSERT vote_results → COMMIT
    │           └─ otel span "tally.run" with child SELECT/UPSERT spans
    └─ returns Stats{RowsUpserted, PollsTouched}  (visible in workflow history)
@@ -243,7 +243,7 @@ Skipping any of these silently drops the final batch of telemetry — exactly th
 Three layers, mirroring the rest of the repo:
 
 1. **Workflow unit tests** — `internal/workflow/tally_test.go` using `go.temporal.io/sdk/testsuite.TestWorkflowEnvironment`. Mock `TallyActivity`. Assert: workflow invokes it once with the right options, returns the activity's `Stats`, propagates errors, retries within policy. No DB, no Docker.
-2. **Activity integration test** — `internal/activity/tally_test.go` using `testsuite.TestActivityEnvironment` + a testcontainers Postgres (same helper pattern as `tally-worker/internal/tally`). Asserts the activity produces the same rows in `vote_results` as calling the baseline aggregator directly. Requires Docker.
+2. **Activity integration test** — `internal/activity/tally_test.go` using `testsuite.TestActivityEnvironment` + a testcontainers Postgres (same helper pattern as `tally-worker/tally`). Asserts the activity produces the same rows in `vote_results` as calling the baseline aggregator directly. Requires Docker.
 3. **E2E smoke** — `make smoke-temporal`: brings up `--profile temporal`, waits for `tctl cluster health` and for Schedule `tally-all`, posts votes via `vote-api`, polls `results-api` until counts match, tears down.
 
 We deliberately do **not** spin up a Temporal server in unit tests — the SDK test environment covers workflow/activity correctness without it.
