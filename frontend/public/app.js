@@ -4,10 +4,21 @@
   const resultsEl = document.getElementById("results");
   const updatedEl = document.getElementById("updated");
 
+  function newId() {
+    if (window.crypto && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === "x" ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+
   function userId() {
     let id = localStorage.getItem("voting-user-id");
     if (!id) {
-      id = crypto.randomUUID();
+      id = newId();
       localStorage.setItem("voting-user-id", id);
     }
     return id;
