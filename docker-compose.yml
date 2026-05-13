@@ -60,6 +60,7 @@ services:
     build:
       context: .
       dockerfile: tally-worker/Dockerfile
+    profiles: ["baseline"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -141,9 +142,67 @@ services:
       # configure the check statically. ${VAR} placeholders are expanded from
       # the agent container's environment at load time.
       - ./datadog/postgres.d/conf.yaml:/etc/datadog-agent/conf.d/postgres.d/conf.yaml:ro
+      - ./datadog/openmetrics.d/conf.yaml:/etc/datadog-agent/conf.d/openmetrics.d/conf.yaml:ro
     ports:
       - "8125:8125/udp"
       - "8126:8126"
+
+  temporal:
+    image: temporalio/auto-setup:1.25
+    profiles: ["temporal"]
+    environment:
+      DB: postgres12
+      PROMETHEUS_ENDPOINT: "0.0.0.0:9090"
+      TEMPORAL_ADDRESS: "temporal:7233"
+    ports:
+      - "7233:7233"
+      - "9090:9090"
+    healthcheck:
+      test: ["CMD", "tctl", "--address", "temporal:7233", "cluster", "health"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  temporal-ui:
+    image: temporalio/ui:2.31
+    profiles: ["temporal"]
+    environment:
+      TEMPORAL_ADDRESS: "temporal:7233"
+      TEMPORAL_CORS_ORIGINS: "http://localhost:8233"
+    ports:
+      - "8233:8080"
+    depends_on:
+      temporal:
+        condition: service_healthy
+
+  tally-worker-temporal:
+    build:
+      context: .
+      dockerfile: tally-worker-temporal/Dockerfile
+    profiles: ["temporal"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      datadog-agent:
+        condition: service_started
+      temporal:
+        condition: service_healthy
+    environment:
+      POSTGRES_DSN: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable"
+      TALLY_INTERVAL: "${TALLY_INTERVAL}"
+      TEMPORAL_HOST_PORT: "temporal:7233"
+      TEMPORAL_NAMESPACE: "${TEMPORAL_NAMESPACE}"
+      TEMPORAL_TASK_QUEUE: "tally-task-queue"
+      DD_SERVICE: "tally-worker-temporal"
+      DD_ENV: "${DD_ENV}"
+      DD_VERSION: "${DD_VERSION}"
+      DD_AGENT_HOST: "datadog-agent"
+      DD_TRACE_AGENT_PORT: "8126"
+      DD_DOGSTATSD_PORT: "8125"
+    labels:
+      com.datadoghq.ad.logs: '[{"source":"go","service":"tally-worker-temporal"}]'
 
 volumes:
   pgdata:
