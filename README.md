@@ -13,12 +13,14 @@ Backing services: a single Postgres (two tables, `votes` and `vote_results`), a 
 
 The `Makefile` shells out to `podman compose` by default; substitute `docker compose` if you use Docker — every command is compose v2 compatible.
 
-1. **Copy the env template and fill in your Datadog API key** (the only required edit):
+1. **Copy the env template and fill in your Datadog API key:**
 
    ```bash
    cp .env.example .env
    $EDITOR .env   # set DD_API_KEY=...
    ```
+
+   `.env` must define **every** key from `.env.example` — `DD_API_KEY`, `DD_SITE`, `DD_ENV`, `DD_VERSION`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, and `TALLY_INTERVAL`. The compose file passes them through to the containers, and the official `postgres` image refuses to start if `POSTGRES_PASSWORD` is empty. Only `DD_API_KEY` needs editing; the rest can keep the defaults shipped in the template.
 
 2. **Build images and bring the stack up:**
 
